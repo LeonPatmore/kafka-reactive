@@ -15,7 +15,7 @@ import java.util.*
 @ConstructorBinding
 @ConfigurationProperties(prefix = "kafka")
 class KafkaProperties(private val hosts: String,
-                      @Value("\${spring.application.name}") var appName: String = "",
+                      @Value("\${spring.application.name}") var appName: String = "", // TODO: Fix me
                       val topic: String) {
 
     fun receiverOptions(): ImmutableMap<String, Any> {
