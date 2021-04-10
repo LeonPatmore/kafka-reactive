@@ -1,5 +1,6 @@
 package leon.patmore.kafkareactive
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -11,12 +12,15 @@ import java.util.*
 @EnableConfigurationProperties(KafkaProperties::class)
 class KafkaConfiguration {
 
+    @Value("\${spring.application.name}")
+    lateinit var appName: String;
+
     /**
      * Creates the receiver options for this kafka consumer.
      */
     @Bean
     fun receiverOptions(kafkaProperties: KafkaProperties) : ReceiverOptions<Any, Any> {
-        return ReceiverOptions.create<Any, Any>(kafkaProperties.receiverOptions())
+        return ReceiverOptions.create<Any, Any>(kafkaProperties.receiverOptions(appName))
                 .subscription(Collections.singleton(kafkaProperties.topic))
     }
 

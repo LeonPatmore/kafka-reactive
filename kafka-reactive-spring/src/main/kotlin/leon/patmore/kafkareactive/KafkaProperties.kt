@@ -15,10 +15,9 @@ import java.util.*
 @ConstructorBinding
 @ConfigurationProperties(prefix = "kafka")
 class KafkaProperties(private val hosts: String,
-                      @Value("\${spring.application.name}") var appName: String = "", // TODO: Fix me
                       val topic: String) {
 
-    fun receiverOptions(): ImmutableMap<String, Any> {
+    fun receiverOptions(appName: String): ImmutableMap<String, Any> {
         val props: MutableMap<String, Any> = HashMap()
         props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = hosts
         props[ConsumerConfig.CLIENT_ID_CONFIG] = "sample-consumer"
