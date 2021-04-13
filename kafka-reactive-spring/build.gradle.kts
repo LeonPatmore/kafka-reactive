@@ -24,6 +24,8 @@ dependencies {
 	implementation("org.jetbrains.kotlinx", "kotlinx-collections-immutable", "0.3.3")
 	implementation("io.projectreactor.kafka", "reactor-kafka", "1.3.3")
 
+	implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
