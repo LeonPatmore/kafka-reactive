@@ -9,3 +9,6 @@ testKafka: ## Tests if Kafka is running correctly
 
 produce: ## Produces a test message
 	docker run -it --network=host --entrypoint "/bin/sh" edenhill/kafkacat:1.6.0 -c "echo Hello | kafkacat -b localhost:9092 -P -t mytest"
+
+offset: ## Get the offset for the test topic
+	docker run evpavel/kt kt group -brokers 192.168.99.100:9092 -group leontest -topic mytest

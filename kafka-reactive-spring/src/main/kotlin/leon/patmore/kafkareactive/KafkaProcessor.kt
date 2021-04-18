@@ -11,7 +11,11 @@ class KafkaProcessor {
     }
 
     fun process(record: ConsumerRecord<Any, Any>) : Mono<Void> {
-        return Mono.just(record).doOnNext { logger.info(it.value().toString()) }.then()
+        return Mono.just(record)
+                .doOnNext { logger.info("Started " + it.value().toString()) }
+                .doOnNext { Thread.sleep(5000) }
+                .doOnNext{ logger.info("Finished " + it.value().toString()) }
+                .then()
     }
 
 }
