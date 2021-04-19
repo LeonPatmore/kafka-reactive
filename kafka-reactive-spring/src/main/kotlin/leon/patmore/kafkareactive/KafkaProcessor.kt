@@ -10,6 +10,9 @@ class KafkaProcessor {
         val logger = Logger.getLogger(KafkaProcessor::class.toString())!!
     }
 
+    /**
+     * For testing scheduler.
+     */
     fun process(record: ConsumerRecord<Any, Any>) : Mono<Void> {
         return Mono.just(record)
                 .doOnNext { logger.info("Started " + it.value().toString()) }
