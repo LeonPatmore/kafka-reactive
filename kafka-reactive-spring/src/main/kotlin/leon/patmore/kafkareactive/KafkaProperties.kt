@@ -15,7 +15,8 @@ import java.util.*
 @ConstructorBinding
 @ConfigurationProperties(prefix = "kafka")
 class KafkaProperties(private val hosts: String,
-                      val topic: String) {
+                      val topic: String,
+                      val commitBatchSize: Int) {
 
     fun receiverOptions(appName: String): ImmutableMap<String, Any> {
         val props: MutableMap<String, Any> = HashMap()
