@@ -13,12 +13,11 @@ class KafkaProcessor {
     /**
      * For testing scheduler.
      */
-    fun process(record: ConsumerRecord<Any, Any>) : Mono<Void> {
+    fun process(record: ConsumerRecord<Any, Any>) : Mono<ConsumerRecord<Any, Any>> {
         return Mono.just(record)
                 .doOnNext { logger.info("Started " + it.value().toString()) }
-                .doOnNext { Thread.sleep(10000) }
+                .doOnNext { Thread.sleep(60000) }
                 .doOnNext{ logger.info("Finished " + it.value().toString()) }
-                .then()
     }
 
 }

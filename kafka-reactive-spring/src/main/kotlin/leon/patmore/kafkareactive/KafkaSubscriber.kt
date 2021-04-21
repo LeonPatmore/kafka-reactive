@@ -1,5 +1,6 @@
 package leon.patmore.kafkareactive
 
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
@@ -16,7 +17,12 @@ class KafkaSubscriber (kafkaReceiver: KafkaReceiver<Any, Any>,
         val logger = Logger.getLogger(KafkaSubscriber::class.toString())!!
     }
 
-    private val pipeline: Flux<Void> = kafkaReceiver.receiveAutoAck().concatMap { it.flatMap { record -> kafkaProcessor.process(record).subscribeOn(Schedulers.parallel()) } }
+//    private val pipeline: Flux<Void> = kafkaReceiver.receiveAutoAck()
+//            .concatMap { it.flatMap { record -> kafkaProcessor.process(record).subscribeOn(Schedulers.parallel()) } }
+
+    private val pipeline: Flux<ConsumerRecord<Any, Any>> = kafkaReceiver
+            .receiveAutoAck()
+            .concatMap { it }.flatMap { kafkaProcessor.process(it) }
     private lateinit var disposable: Disposable
 
     private fun start() {
