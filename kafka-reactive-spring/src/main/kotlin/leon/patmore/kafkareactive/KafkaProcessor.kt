@@ -2,6 +2,7 @@ package leon.patmore.kafkareactive
 
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import reactor.core.publisher.Mono
+import java.time.Duration
 import java.util.logging.Logger
 
 class KafkaProcessor {
@@ -16,7 +17,7 @@ class KafkaProcessor {
     fun process(record: ConsumerRecord<Any, Any>) : Mono<ConsumerRecord<Any, Any>> {
         return Mono.just(record)
                 .doOnNext { logger.info("Started " + it.value().toString()) }
-                .doOnNext { Thread.sleep(60000) }
+                .delayElement(Duration.ofSeconds(30))
                 .doOnNext{ logger.info("Finished " + it.value().toString()) }
     }
 
