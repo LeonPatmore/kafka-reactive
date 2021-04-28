@@ -20,6 +20,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.apache.kafka", "kafka-clients", "2.8.0")
+	implementation("io.projectreactor", "reactor-core", "3.4.5")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 

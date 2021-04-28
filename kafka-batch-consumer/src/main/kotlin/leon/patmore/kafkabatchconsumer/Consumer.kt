@@ -1,9 +1,12 @@
 package leon.patmore.kafkabatchconsumer
 
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import reactor.core.publisher.Sinks
 import java.util.*
 
-class Consumer {
+class Consumer ( val sink = Sinks.many().multicast()) {
+
+
 
     fun a() {
         val props = Properties()
@@ -16,5 +19,7 @@ class Consumer {
         val consumer: KafkaConsumer<String, String> = KafkaConsumer<String, String>(props)
         consumer.poll()
     }
+
+    fun poll
 
 }
