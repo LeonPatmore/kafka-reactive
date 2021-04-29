@@ -1,14 +1,29 @@
 package leon.patmore.kafkabatchconsumer
 
+import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import reactor.core.publisher.Sinks
+import reactor.core.scheduler.Scheduler
+import reactor.core.scheduler.Schedulers
+import java.time.Duration
 import java.util.*
+import java.util.concurrent.TimeUnit
 
-class Consumer ( val sink = Sinks.many().multicast()) {
+@Component
+class Consumer (val sink: Sinks.MulticastSpec = Sinks.many().multicast(),
+                scheduler: Scheduler = Schedulers.single()) {
 
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val logger = LoggerFactory.getLogger(javaClass.enclosingClass)
+    }
 
+    private lateinit var consumer: KafkaConsumer<String, String>
 
-    fun a() {
+    init {
         val props = Properties()
         props["bootstrap.servers"] = "localhost:9092"
         props["group.id"] = "test"
@@ -16,10 +31,15 @@ class Consumer ( val sink = Sinks.many().multicast()) {
         props["auto.commit.interval.ms"] = "1000"
         props["key.deserializer"] = "org.apache.kafka.common.serialization.StringDeserializer"
         props["value.deserializer"] = "org.apache.kafka.common.serialization.StringDeserializer"
-        val consumer: KafkaConsumer<String, String> = KafkaConsumer<String, String>(props)
-        consumer.poll()
+        consumer = KafkaConsumer<String, String>(props)
+        scheduler.schedulePeriodically(r {poll()}, 1000, 1000, TimeUnit.MILLISECONDS)
     }
 
-    fun poll
+    private fun r(f: () -> Unit): Runnable = Runnable { f() }
+
+    private fun poll () {
+        val consumer: ConsumerRecords<String, String> = consumer.poll(Duration.ofSeconds(2))
+        logger.info("Consumed [ {} ] records!", consumer)
+    }
 
 }
