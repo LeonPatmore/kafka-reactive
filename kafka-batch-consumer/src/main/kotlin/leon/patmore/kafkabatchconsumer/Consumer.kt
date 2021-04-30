@@ -1,9 +1,11 @@
 package leon.patmore.kafkabatchconsumer
 
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Scheduler
 import reactor.core.scheduler.Schedulers
@@ -12,8 +14,8 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Component
-class Consumer (val sink: Sinks.MulticastSpec = Sinks.many().multicast(),
-                scheduler: Scheduler = Schedulers.single()) {
+class Consumer(val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
+               scheduler: Scheduler = Schedulers.single()) {
 
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
@@ -38,8 +40,12 @@ class Consumer (val sink: Sinks.MulticastSpec = Sinks.many().multicast(),
     private fun r(f: () -> Unit): Runnable = Runnable { f() }
 
     private fun poll () {
-        val consumer: ConsumerRecords<String, String> = consumer.poll(Duration.ofSeconds(2))
+        val records: ConsumerRecords<String, String> = consumer.poll(Duration.ofSeconds(2))
         logger.info("Consumed [ {} ] records!", consumer)
+        val batchFlux = Flux.fromIterable(records).doOnComplete {
+            logger.info("Batch finished!")
+        }
+        sink.tryEmitNext(batchFlux);
     }
 
 }
