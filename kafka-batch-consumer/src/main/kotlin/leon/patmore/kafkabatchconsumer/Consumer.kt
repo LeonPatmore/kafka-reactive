@@ -34,7 +34,8 @@ class Consumer(val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sink
         props["key.deserializer"] = "org.apache.kafka.common.serialization.StringDeserializer"
         props["value.deserializer"] = "org.apache.kafka.common.serialization.StringDeserializer"
         consumer = KafkaConsumer<String, String>(props)
-        scheduler.schedulePeriodically(r {poll()}, 1000, 1000, TimeUnit.MILLISECONDS)
+        consumer.subscribe(Collections.singletonList("mytest"))
+        scheduler.schedulePeriodically(r {poll()}, 5000, 5000, TimeUnit.MILLISECONDS)
     }
 
     private fun r(f: () -> Unit): Runnable = Runnable { f() }
