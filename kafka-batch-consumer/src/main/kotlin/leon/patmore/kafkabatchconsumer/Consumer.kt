@@ -14,8 +14,10 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Component
-class Consumer(val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
-               scheduler: Scheduler = Schedulers.single()) {
+class Consumer(sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
+               scheduler: Scheduler = Schedulers.single(),
+               val kafkaProcessor: KafkaProcessor,
+               subscriber: Scheduler = Schedulers.parallel()) {
 
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
@@ -36,6 +38,8 @@ class Consumer(val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sink
         consumer = KafkaConsumer<String, String>(props)
         consumer.subscribe(Collections.singletonList("mytest"))
         scheduler.schedulePeriodically(r {poll()}, 5000, 5000, TimeUnit.MILLISECONDS)
+
+        sink.asFlux().concatMap { r -> r }.flatMap { kafkaProcessor.process(it) }.subscribeOn(subscriber).subscribe()
     }
 
     private fun r(f: () -> Unit): Runnable = Runnable { f() }
