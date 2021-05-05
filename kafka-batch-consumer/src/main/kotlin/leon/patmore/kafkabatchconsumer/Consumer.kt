@@ -14,7 +14,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Component
-class Consumer(sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
+class Consumer(val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
                scheduler: Scheduler = Schedulers.single(),
                val kafkaProcessor: KafkaProcessor,
                subscriber: Scheduler = Schedulers.parallel()) {
