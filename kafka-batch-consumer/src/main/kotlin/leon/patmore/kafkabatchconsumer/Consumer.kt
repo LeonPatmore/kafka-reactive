@@ -14,7 +14,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Component
-class Consumer(val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
+class Consumer(private val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
                scheduler: Scheduler = Schedulers.single(),
                val kafkaProcessor: KafkaProcessor,
                subscriber: Scheduler = Schedulers.parallel()) {
@@ -46,7 +46,7 @@ class Consumer(val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sink
 
     private fun poll () {
         val records: ConsumerRecords<String, String> = consumer.poll(Duration.ofSeconds(2))
-        logger.info("Consumed [ {} ] records!", consumer)
+        logger.info("Consumed [ {} ] records!", records.count())
         val batchFlux = Flux.fromIterable(records).doOnComplete {
             logger.info("Batch finished!")
         }
