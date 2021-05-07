@@ -1,5 +1,6 @@
 package leon.patmore.kafkabatchconsumer
 
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -30,9 +31,9 @@ class Consumer(private val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>
     init {
         val props = Properties()
         props["bootstrap.servers"] = "localhost:9092"
-        props["group.id"] = "test"
-        props["enable.auto.commit"] = "true"
-        props["auto.commit.interval.ms"] = "1000"
+        props["group.id"] = "leontest"
+        props["enable.auto.commit"] = "false"
+        props[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
         props["key.deserializer"] = "org.apache.kafka.common.serialization.StringDeserializer"
         props["value.deserializer"] = "org.apache.kafka.common.serialization.StringDeserializer"
         consumer = KafkaConsumer<String, String>(props)
@@ -49,6 +50,9 @@ class Consumer(private val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>
         logger.info("Consumed [ {} ] records!", records.count())
         val batchFlux = Flux.fromIterable(records).doOnComplete {
             logger.info("Batch finished!")
+            records.forEach {
+                consumer.commitSync(records)
+            }
         }
         sink.tryEmitNext(batchFlux);
     }
