@@ -1,9 +1,7 @@
 package leon.patmore.kafkabatchconsumer
 
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
-import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.consumer.*
+import org.apache.kafka.common.TopicPartition
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
@@ -13,6 +11,7 @@ import reactor.core.scheduler.Schedulers
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.HashMap
 
 @Component
 class Consumer(private val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
@@ -50,9 +49,23 @@ class Consumer(private val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>
         logger.info("Consumed [ {} ] records!", records.count())
         val batchFlux = Flux.fromIterable(records).doOnComplete {
             logger.info("Batch finished!")
+            val offsetMap = HashMap<TopicPartition, OffsetAndMetadata>()
             records.forEach {
-                consumer.commitSync(records)
+                val partition = TopicPartition(it.topic(), it.partition())
+                val currentOffset = offsetMap.getOrDefault(partition, null)
+                val currentOffsetNum: Long = if (Objects.isNull(currentOffset)) {
+                    -1
+                } else {
+                    currentOffset?.offset()!!
+                }
+                val newOffsetNum: Long = if (currentOffsetNum < it.offset()) {
+                    it.offset()
+                } else {
+                    currentOffsetNum
+                }
+                offsetMap[partition] = OffsetAndMetadata(newOffsetNum)
             }
+            consumer.commitSync(offsetMap)
         }
         sink.tryEmitNext(batchFlux);
     }
