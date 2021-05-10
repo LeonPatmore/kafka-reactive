@@ -39,7 +39,16 @@ class Consumer(private val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>
         consumer.subscribe(Collections.singletonList("mytest"))
         scheduler.schedulePeriodically(r {poll()}, 5000, 5000, TimeUnit.MILLISECONDS)
 
-        sink.asFlux().concatMap { r -> r }.flatMap { kafkaProcessor.process(it) }.subscribeOn(subscriber).subscribe()
+        sink.asFlux()
+                .concatMap { r -> r }
+                .flatMap { kafkaProcessor.process(it) }
+                .doOnError{ err ->
+                    run {
+                        logger.info("Could not process record due to $err")
+                    }
+//                    Send to DLQ or send back to original topic.
+                }
+                .subscribeOn(subscriber).subscribe()
     }
 
     private fun r(f: () -> Unit): Runnable = Runnable { f() }
