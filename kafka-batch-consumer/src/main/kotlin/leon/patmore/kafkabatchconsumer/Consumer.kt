@@ -68,7 +68,7 @@ class Consumer(private val sink: Sinks.Many<Flux<ConsumerRecord<String, String>>
                     currentOffset?.offset()!!
                 }
                 val newOffsetNum: Long = if (currentOffsetNum < it.offset()) {
-                    it.offset()
+                    it.offset() + 1
                 } else {
                     currentOffsetNum
                 }
