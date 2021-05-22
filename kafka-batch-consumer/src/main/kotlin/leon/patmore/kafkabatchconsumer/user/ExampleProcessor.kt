@@ -5,6 +5,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import java.time.Duration
 
 @Component
 class ExampleProcessor : KafkaProcessor {
@@ -16,7 +17,11 @@ class ExampleProcessor : KafkaProcessor {
     }
 
     override fun process(any: ConsumerRecord<String, String>): Mono<Void> {
-        return Mono.just(any).doOnNext{logger.info("Procesing!")}.then()
+        return Mono.just(any)
+                .doOnNext{logger.info("Starting procesing ${it.value()}")}
+                .delayElement(Duration.ofSeconds(10))
+                .doOnNext{logger.info("Finishing procesing ${it.value()}")}
+                .then()
     }
 
 }
