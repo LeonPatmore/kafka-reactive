@@ -15,9 +15,8 @@ import kotlin.collections.HashMap
 
 @Component
 class Consumer(private val sink: Sinks.Many<Iterable<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
-               scheduler: Scheduler = Schedulers.single(),
-               val kafkaProcessor: KafkaProcessor,
-               subscriber: Scheduler = Schedulers.parallel()) {
+               val scheduler: Scheduler = Schedulers.single(),
+               val kafkaProcessor: KafkaProcessor) {
 
     companion object {
         @Suppress("JAVA_CLASS_ON_COMPANION")
@@ -45,8 +44,8 @@ class Consumer(private val sink: Sinks.Many<Iterable<ConsumerRecord<String, Stri
     private fun consume(): Flux<Void> {
         return sink.asFlux().flatMap {
                 Flux.fromIterable(it)
-                        .flatMap { record -> kafkaProcessor.process(record) }
-                        .doOnError{ err ->
+                        .flatMap { record -> kafkaProcessor.process(record, scheduler) }
+                        .doOnError { err ->
                             run {
                                 logger.info("Could not process record due to $err")
                             }
