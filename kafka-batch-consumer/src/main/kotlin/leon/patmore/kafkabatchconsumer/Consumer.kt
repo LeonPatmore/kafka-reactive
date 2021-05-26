@@ -15,7 +15,7 @@ import kotlin.collections.HashMap
 
 @Component
 class Consumer(private val sink: Sinks.Many<Iterable<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
-               val scheduler: Scheduler = Schedulers.single(),
+               private val scheduler: Scheduler = Schedulers.single(),
                val kafkaProcessor: KafkaProcessor) {
 
     companion object {
