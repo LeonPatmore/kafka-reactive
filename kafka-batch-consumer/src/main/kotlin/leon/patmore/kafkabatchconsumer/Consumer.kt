@@ -83,4 +83,8 @@ class Consumer(private val sink: Sinks.Many<Iterable<ConsumerRecord<String, Stri
         sink.tryEmitNext(records)
     }
 
+    fun getConsumer(): KafkaConsumer<String, String> {
+        return consumer
+    }
+
 }

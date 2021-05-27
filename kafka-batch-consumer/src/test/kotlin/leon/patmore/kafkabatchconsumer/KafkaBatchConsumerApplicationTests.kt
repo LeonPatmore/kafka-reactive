@@ -15,6 +15,8 @@ class KafkaBatchConsumerApplicationTests {
 	@Autowired
 	lateinit var producer: TestProducer
 
+	lateinit var consumer: Consumer
+
 	@Test
 	fun contextLoads() {
 	}
@@ -25,6 +27,10 @@ class KafkaBatchConsumerApplicationTests {
 		producer.producer.send(record)
 
 		Thread.sleep(20000)
+	}
+
+	fun getConsumerOffset() {
+		consumer.getConsumer().beginningOffsets()
 	}
 
 }
