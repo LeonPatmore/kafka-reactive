@@ -1,6 +1,8 @@
 package leon.patmore.kafkabatchconsumer
 
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.TopicPartition
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -17,8 +19,11 @@ class KafkaBatchConsumerApplicationTests {
 
 	lateinit var consumer: Consumer
 
-	@Test
-	fun contextLoads() {
+	lateinit var partitions: Set<TopicPartition>
+
+	@BeforeAll
+	fun before() {
+		partitions = consumer.getConsumer().assignment()
 	}
 
 	@Test
@@ -30,7 +35,7 @@ class KafkaBatchConsumerApplicationTests {
 	}
 
 	fun getConsumerOffset() {
-		consumer.getConsumer().beginningOffsets()
+		consumer.getConsumer().position(partitions.elementAt(0))
 	}
 
 }
