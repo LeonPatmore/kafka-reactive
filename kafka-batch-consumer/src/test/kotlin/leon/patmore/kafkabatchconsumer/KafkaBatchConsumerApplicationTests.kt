@@ -3,6 +3,7 @@ package leon.patmore.kafkabatchconsumer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -17,25 +18,26 @@ class KafkaBatchConsumerApplicationTests {
 	@Autowired
 	lateinit var producer: TestProducer
 
+	@Autowired
 	lateinit var consumer: Consumer
 
-	lateinit var partitions: Set<TopicPartition>
+	var partitions: Set<TopicPartition>? = null
 
-	@BeforeAll
+	@BeforeEach
 	fun before() {
 		partitions = consumer.getConsumer().assignment()
 	}
 
 	@Test
-	fun test() {
+	fun testAddingElementThenCrashing() {
 		val record = ProducerRecord(topic, 0, "key", "value")
 		producer.producer.send(record)
 
-		Thread.sleep(20000)
+		Thread.sleep(10000)
 	}
 
 	fun getConsumerOffset() {
-		consumer.getConsumer().position(partitions.elementAt(0))
+		consumer.getConsumer().position(partitions?.elementAt(0))
 	}
 
 }
