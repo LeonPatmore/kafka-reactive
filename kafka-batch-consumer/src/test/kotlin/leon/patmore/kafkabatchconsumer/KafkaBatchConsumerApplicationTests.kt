@@ -30,10 +30,10 @@ class KafkaBatchConsumerApplicationTests {
 
 	@Test
 	fun testAddingElementThenCrashing() {
-		val record = ProducerRecord(topic, 0, "key", "value")
-		producer.producer.send(record)
-
-		Thread.sleep(10000)
+//		val record = ProducerRecord(topic, 0, "key", "value")
+//		producer.producer.send(record)
+//
+//		Thread.sleep(10000)
 	}
 
 	fun getConsumerOffset() {

@@ -1,5 +1,19 @@
+ifeq ($(OS),Windows_NT)
+    detected_OS := Windows
+else
+    detected_OS := $(shell uname)
+endif
+
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+setJavaEnvVarsWindows: ## Sets the env vars for Java for Windows
+	echo "set JAVA_HOME=C:\Users\Leon\Downloads\jdk-11" > .env; \
+	echo "set PATH=%PATH%;C:\Users\Leon\Downloads\jdk-11\bin" >> .env
+
+setJavaEnvVars: ## Set the env vars for Java
+	ifeq ($(OS),Windows_NT)
+		$(MAKE) setJavaEnvVarsWindows
 
 startKafka:  ## Starts local kafka for testing
 	docker-compose -f kafka-compose.yml up -d
