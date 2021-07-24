@@ -16,6 +16,8 @@ setJavaEnvVars: ## Set the env vars for Java
 		$(MAKE) setJavaEnvVarsWindows
 
 startKafka:  ## Starts local kafka for testing
+	docker-compose -f kafka-compose.yml stop
+	docker-compose -f kafka-compose.yml rm -f
 	docker-compose -f kafka-compose.yml up -d
 
 testKafka: ## Tests if Kafka is running correctly
