@@ -17,5 +17,5 @@ class ProcessInstance(ServiceInstance):
 class KafkaService(Service):
 
     def start(self) -> ServiceInstance:
-        pid = run("gradlew test --tests *TestConsumer* --stacktrace")
+        pid = run("./gradlew test --tests *TestConsumer* --stacktrace")
         return ProcessInstance(pid)
