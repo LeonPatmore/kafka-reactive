@@ -36,7 +36,7 @@ class Consumer(private val sink: Sinks.Many<Iterable<ConsumerRecord<String, Stri
         props["value.deserializer"] = "org.apache.kafka.common.serialization.StringDeserializer"
         consumer = KafkaConsumer<String, String>(props)
         consumer.subscribe(Collections.singletonList("mytest"))
-        scheduler.schedulePeriodically(r {poll()}, 5000, 5000, TimeUnit.MILLISECONDS)
+        scheduler.schedulePeriodically(r {poll()}, 5000, 1000, TimeUnit.MILLISECONDS)
 
         consume().subscribeOn(scheduler).subscribe()
     }

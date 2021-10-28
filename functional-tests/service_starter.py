@@ -1,11 +1,14 @@
 
 class ServiceInstance(object):
 
+    def start(self):
+        raise NotImplementedError()
+
     def stop(self):
         raise NotImplementedError()
 
 
-class Service(object):
+class ServiceFactory(object):
 
-    def start(self) -> ServiceInstance:
+    def generate_instance(self) -> ServiceInstance:
         raise NotImplementedError()
