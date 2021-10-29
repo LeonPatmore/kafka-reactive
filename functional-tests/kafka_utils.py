@@ -12,13 +12,26 @@ log = logging.getLogger(__name__)
 
 class KafkaUtils(object):
 
-    def __init__(self, bootstrap_servers: list, topic: str):
+    def __init__(self, bootstrap_servers: list, topic: str, group_id: str):
         self.producer = KafkaProducer(bootstrap_servers=bootstrap_servers,
                                       api_version=(5, 5, 1),
                                       request_timeout_ms=1000)
         self.consumer = KafkaConsumer(bootstrap_servers=bootstrap_servers)
         self.admin_client = KafkaAdminClient(bootstrap_servers=bootstrap_servers)
+        self.bootstrap_servers = bootstrap_servers
         self.topic = topic
+        self.group_id = group_id
+
+    def consume_messages(self):
+        tmp_consumer = KafkaConsumer(self.topic,
+                                     bootstrap_servers=self.bootstrap_servers,
+                                     auto_offset_reset='earliest',
+                                     group_id=self.group_id,
+                                     consumer_timeout_ms=2000,
+                                     enable_auto_commit=True)
+        for msg in tmp_consumer:
+            log.info(f"Found message [ {msg.value} ]")
+        tmp_consumer.close()
 
     def ensure_topic_created(self):
         try:
@@ -53,22 +66,22 @@ class KafkaUtils(object):
             if partition.partition == latest_partition.partition:
                 return latest_offset
 
-    def get_offsets(self, group_id: str) -> dict:
-        return self.admin_client.list_consumer_group_offsets(group_id)
+    def get_offsets(self) -> dict:
+        return self.admin_client.list_consumer_group_offsets(self.group_id)
 
-    def wait_for_offset_catchup(self, group_id: str, timeout_seconds: int = 60):
+    def wait_for_offset_catchup(self, timeout_seconds: int = 60):
         end_time = time.time() + timeout_seconds
         while time.time() < end_time:
             try:
-                self.ensure_group_up_to_date(group_id)
+                self.ensure_group_up_to_date()
                 return
             except Exception as e:
                 log.info(e)
             time.sleep(1)
         raise Exception("Timed out!")
 
-    def ensure_group_up_to_date(self, group_id: str):
-        current_offsets = self.get_offsets(group_id)
+    def ensure_group_up_to_date(self):
+        current_offsets = self.get_offsets()
 
         for partition, current_offset in current_offsets.items():
             latest_offset = self.get_latest_offset_for_partition(partition)

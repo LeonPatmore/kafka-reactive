@@ -2,11 +2,11 @@ import logging
 
 import pytest
 
-from cofiguration import kafka_utils, group_id
+from cofiguration import kafka_utils
 from kafka_processor_service import BatchConsumerFactory
 from service_starter import ServiceInstance
 
-logging.getLogger("kafka.conn").setLevel(logging.WARN)
+logging.getLogger("kafka.conn").setLevel(logging.DEBUG)
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
@@ -23,18 +23,23 @@ def given_service(request) -> ServiceInstance:
     return instance
 
 
-def test_simple(given_service):
-    log.info("Starting offset: " + str(kafka_utils.get_offsets(group_id)))
+@pytest.fixture
+def given_kafka_up_to_date():
+    kafka_utils.consume_messages()
+
+
+def test_simple(given_service, given_kafka_up_to_date):
+    log.info("Starting offset: " + str(kafka_utils.get_offsets()))
     log.info("Latest offsets: " + str(kafka_utils.get_latest_offsets()))
-    kafka_utils.ensure_group_up_to_date(group_id)
+    kafka_utils.ensure_group_up_to_date()
 
     kafka_utils.produce_random_element()
 
-    log.info("New offset: " + str(kafka_utils.get_offsets(group_id)))
+    log.info("New offset: " + str(kafka_utils.get_offsets()))
     log.info("New latest offsets: " + str(kafka_utils.get_latest_offsets()))
 
     given_service.start()
 
-    kafka_utils.wait_for_offset_catchup(group_id)
+    kafka_utils.wait_for_offset_catchup()
 
     given_service.stop()

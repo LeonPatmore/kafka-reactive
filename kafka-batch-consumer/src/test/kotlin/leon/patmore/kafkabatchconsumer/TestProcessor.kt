@@ -19,7 +19,7 @@ class TestProcessor : KafkaProcessor {
     override fun process(any: ConsumerRecord<String, String>, s: Scheduler): Mono<Void> {
         return Mono.just(any)
             .doOnNext { logger.info("Starting procesing ${it.value()}") }
-            .delayElement(Duration.ofSeconds(5), s)
+            .delayElement(Duration.ofSeconds(1), s)
             .doOnNext { logger.info("Finishing procesing ${it.value()}") }
             .then()
     }
