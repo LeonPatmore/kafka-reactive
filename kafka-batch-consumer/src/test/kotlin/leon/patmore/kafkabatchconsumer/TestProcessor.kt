@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Scheduler
+import reactor.core.scheduler.Schedulers
 import java.time.Duration
 
 @Component
@@ -16,10 +17,10 @@ class TestProcessor : KafkaProcessor {
         private val logger = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 
-    override fun process(any: ConsumerRecord<String, String>, s: Scheduler): Mono<Void> {
+    override fun process(any: ConsumerRecord<String, String>): Mono<Void> {
         return Mono.just(any)
             .doOnNext { logger.info("Starting procesing ${it.value()}") }
-            .delayElement(Duration.ofSeconds(1), s)
+            .delayElement(Duration.ofSeconds(1))
             .doOnNext { logger.info("Finishing procesing ${it.value()}") }
             .then()
     }

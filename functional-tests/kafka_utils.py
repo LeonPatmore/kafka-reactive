@@ -22,7 +22,7 @@ class KafkaUtils(object):
         self.topic = topic
         self.group_id = group_id
 
-    def consume_messages(self):
+    def consume_messages_and_close(self):
         tmp_consumer = KafkaConsumer(self.topic,
                                      bootstrap_servers=self.bootstrap_servers,
                                      auto_offset_reset='earliest',

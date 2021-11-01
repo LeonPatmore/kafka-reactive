@@ -25,7 +25,7 @@ def given_service(request) -> ServiceInstance:
 
 @pytest.fixture
 def given_kafka_up_to_date():
-    kafka_utils.consume_messages()
+    kafka_utils.consume_messages_and_close()
 
 
 def test_simple(given_service, given_kafka_up_to_date):

@@ -5,6 +5,7 @@ import org.apache.kafka.common.TopicPartition
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Scheduler
 import reactor.core.scheduler.Schedulers
@@ -14,7 +15,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.collections.HashMap
 
 @Component
-class Consumer(private val sink: Sinks.Many<Iterable<ConsumerRecord<String, String>>> = Sinks.many().multicast().onBackpressureBuffer(),
+class Consumer(private val sink: Sinks.Many<Iterable<ConsumerRecord<String, String>>> = Sinks.many().unicast().onBackpressureBuffer(),
+               private val commitSink: Sinks.Many<Iterable<ConsumerRecord<String, String>>> = Sinks.many().unicast().onBackpressureBuffer(),
                private val scheduler: Scheduler = Schedulers.single(),
                val kafkaProcessor: KafkaProcessor) {
 
@@ -38,21 +40,33 @@ class Consumer(private val sink: Sinks.Many<Iterable<ConsumerRecord<String, Stri
         consumer.subscribe(Collections.singletonList("mytest"))
         scheduler.schedulePeriodically(r {poll()}, 0, 1000, TimeUnit.MILLISECONDS)
 
-        consume().subscribeOn(scheduler).subscribe()
+        consume().subscribe()
+        commit().subscribe()
     }
 
     private fun consume(): Flux<Void> {
-        return sink.asFlux().flatMap {
+        return sink
+            .asFlux()
+            .publishOn(Schedulers.boundedElastic())
+            .flatMap {
                 Flux.fromIterable(it)
-                        .flatMap { record -> kafkaProcessor.process(record, scheduler) }
+                        .flatMap { record -> kafkaProcessor.process(record) }
                         .doOnError { err ->
                             run {
                                 logger.info("Could not process record due to $err")
                             }
 //                    Send to DLQ or send back to original topic.
                         }
-                        .doOnComplete {commitBatch(it)}
+                        .doOnComplete {commitSink.tryEmitNext(it)}
             }
+    }
+
+    private fun commit(): Mono<Void> {
+        return commitSink
+            .asFlux()
+            .publishOn(scheduler)
+            .map { commitBatch(it) }
+            .then()
     }
 
     private fun commitBatch(batch: Iterable<ConsumerRecord<String, String>>) {
