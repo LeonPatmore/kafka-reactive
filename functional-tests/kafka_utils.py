@@ -48,11 +48,10 @@ class KafkaUtils(object):
             logging.warning("Could not produce Kafka record!" + str(e))
             raise e
 
-    def produce_random_element(self):
+    def produce_element_with_delay(self, delay_ms: int):
         key = uuid()
-        value = uuid()
-        log.info(f"Producing element with key [ {key} ] and value [ {value} ]")
-        self._produce_record_sync(key, value)
+        log.info(f"Producing element with key [ {key} ] and delay [ {delay_ms} ]")
+        self._produce_record_sync(key, str(delay_ms))
 
     def _get_topic_partitions(self) -> list:
         return [TopicPartition(self.topic, partition) for partition in self.consumer.partitions_for_topic(self.topic)]

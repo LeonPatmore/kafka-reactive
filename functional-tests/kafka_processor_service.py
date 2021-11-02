@@ -1,8 +1,11 @@
+import logging
 import os
 import signal
 import threading
 from commands import run
 from service_starter import ServiceInstance, ServiceFactory
+
+log = logging.getLogger(__name__)
 
 
 class ProcessInstance(ServiceInstance):
@@ -11,14 +14,20 @@ class ProcessInstance(ServiceInstance):
 
         def __init__(self, cmd: str):
             super().__init__()
-            self.pid = None
+            self.process = None
             self.cmd = cmd
 
         def run(self):
-            self.pid = run(self.cmd)
+            self.process = run(self.cmd)
+
+        def kill(self):
+            # os.kill(self.pid, signal.CTRL_C_EVENT)
+            pass
 
         def stop(self):
-            os.kill(self.pid, signal.CTRL_C_EVENT)
+            os.system(f"taskkill /pid {self.process.pid} /f /t")
+            # threading.Thread(target=lambda: self.kill()).start()
+            pass
 
     def __init__(self, cmd):
         self.thread = None
@@ -29,8 +38,8 @@ class ProcessInstance(ServiceInstance):
         self.thread.start()
 
     def stop(self):
+        log.info("Killing service!")
         self.thread.stop()
-        self.thread.join()
 
 
 class BatchConsumerFactory(ServiceFactory):

@@ -18,10 +18,11 @@ class TestProcessor : KafkaProcessor {
     }
 
     override fun process(any: ConsumerRecord<String, String>): Mono<Void> {
+        val delay = any.value().toLong()
         return Mono.just(any)
-            .doOnNext { logger.info("Starting procesing ${it.value()}") }
-            .delayElement(Duration.ofSeconds(1))
-            .doOnNext { logger.info("Finishing procesing ${it.value()}") }
+            .doOnNext { logger.info("Starting processing ${it.key()} with delay $delay") }
+            .delayElement(Duration.ofMillis(delay))
+            .doOnNext { logger.info("Finishing processing ${it.key()}") }
             .then()
     }
 
