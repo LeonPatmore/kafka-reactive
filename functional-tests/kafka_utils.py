@@ -5,7 +5,7 @@ from kafka import KafkaProducer, KafkaConsumer, KafkaAdminClient, TopicPartition
 from kafka.admin import NewTopic
 from kafka.errors import KafkaError, TopicAlreadyExistsError
 
-from utils import uuid
+from utils import uuid, do_until_true_with_timeout
 
 log = logging.getLogger(__name__)
 
@@ -21,6 +21,15 @@ class KafkaUtils(object):
         self.bootstrap_servers = bootstrap_servers
         self.topic = topic
         self.group_id = group_id
+
+    def has_consumer_group(self) -> bool:
+        for group in self.admin_client.list_consumer_groups():
+            if group[0] == self.group_id:
+                return True
+        return False
+
+    def wait_until_consumer_group(self):
+        do_until_true_with_timeout(self.has_consumer_group)
 
     def consume_messages_and_close(self):
         tmp_consumer = KafkaConsumer(self.topic,

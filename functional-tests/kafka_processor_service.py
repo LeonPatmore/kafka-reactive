@@ -20,26 +20,22 @@ class ProcessInstance(ServiceInstance):
         def run(self):
             self.process = run(self.cmd)
 
-        def kill(self):
-            # os.kill(self.pid, signal.CTRL_C_EVENT)
-            pass
-
         def stop(self):
             os.system(f"taskkill /pid {self.process.pid} /f /t")
-            # threading.Thread(target=lambda: self.kill()).start()
-            pass
 
     def __init__(self, cmd):
         self.thread = None
         self.cmd = cmd
 
     def start(self):
+        log.info("Starting service!")
         self.thread = self._Thread(self.cmd)
         self.thread.start()
 
     def stop(self):
         log.info("Killing service!")
         self.thread.stop()
+        self.thread.join()
 
 
 class BatchConsumerFactory(ServiceFactory):
