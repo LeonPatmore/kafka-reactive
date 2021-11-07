@@ -87,14 +87,6 @@ def test_when_batch_with_delay_blocks_next_batch(request, given_factory, given_k
     kafka_utils.wait_until_consumer_group()
     sleep(5)
 
-    kafka_utils.produce_element_with_delay(60000)
+    kafka_utils.produce_element_with_delay(1000)
 
-
-
-    log.info("New offset: " + str(kafka_utils.get_offsets()))
-    log.info("New latest offsets: " + str(kafka_utils.get_latest_offsets()))
-
-
-
-def test_():
-    BatchConsumerFactory().generate_instance().start()
+    kafka_utils.ensure_not_up_to_date_for_n_seconds(40)

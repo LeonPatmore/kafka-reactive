@@ -88,13 +88,21 @@ class KafkaUtils(object):
             time.sleep(1)
         raise Exception("Timed out!")
 
-    def ensure_group_up_to_date(self):
+    def _is_group_up_to_date(self) -> bool:
         current_offsets = self.get_offsets()
-
         for partition, current_offset in current_offsets.items():
             latest_offset = self.get_latest_offset_for_partition(partition)
             if current_offset.offset < latest_offset:
-                raise Exception(f"Not up to date for partition [ {partition} ]."
-                                f" Current offset is {current_offset.offset}, latest is [ {latest_offset} ]")
+                return False
+        return True
 
-        log.info(f"Current offsets [ {current_offsets} ] are up to date!")
+    def ensure_group_up_to_date(self):
+        if not self._is_group_up_to_date():
+            raise Exception("Not up to date!")
+        log.info(f"Current offsets are up to date!")
+
+    def ensure_not_up_to_date_for_n_seconds(self, seconds: int):
+        end_time = time.time() + seconds
+        while time.time() < end_time:
+            if self._is_group_up_to_date():
+                raise Exception("Offsets are up to date!")
