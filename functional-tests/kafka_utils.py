@@ -10,6 +10,34 @@ from utils import uuid, do_until_true_with_timeout
 log = logging.getLogger(__name__)
 
 
+class OffsetDifference(object):
+
+    def __init__(self, first_offsets: dict[int, int], second_offsets: dict[int, int]):
+        self.first_offsets = first_offsets
+        self.second_offsets = second_offsets
+        self.offset_difference = self._calculate_offset_difference()
+
+    def _calculate_offset_difference(self) -> dict[int, tuple]:
+        offset_difference = {}
+        for partition, first_offset in self.first_offsets.items():
+            second_offset = self.second_offsets.get(partition, -1)
+            offset_difference[partition] = (first_offset, second_offset, (second_offset-first_offset))
+        return offset_difference
+
+    def is_up_to_date(self):
+        for values_and_difference in self.offset_difference.values():
+            if values_and_difference[2] > 0:
+                return False
+        return True
+
+    def __str__(self) -> str:
+        string = ""
+        for partition, values_and_difference in self.offset_difference.items():
+            string += f"[ Part {partition}, {values_and_difference[0]} - {values_and_difference[1]} " \
+                      f"= {values_and_difference[2]} ], "
+        return string
+
+
 class KafkaUtils(object):
 
     def __init__(self, bootstrap_servers: list, topic: str, group_id: str):
@@ -62,47 +90,43 @@ class KafkaUtils(object):
         log.info(f"Producing element with key [ {key} ] and delay [ {delay_ms} ]")
         self._produce_record_sync(key, str(delay_ms))
 
-    def _get_topic_partitions(self) -> list:
+    def _get_topic_partitions(self) -> list[TopicPartition]:
         return [TopicPartition(self.topic, partition) for partition in self.consumer.partitions_for_topic(self.topic)]
 
-    def get_latest_offsets(self) -> dict:
-        return self.consumer.end_offsets(self._get_topic_partitions())
+    def get_latest_offsets(self) -> dict[int, int]:
+        return {topic_partition.partition: offset for (topic_partition, offset)
+                in self.consumer.end_offsets(self._get_topic_partitions()).items()}
 
-    def get_latest_offset_for_partition(self, partition: TopicPartition) -> int:
+    def get_latest_offset_for_partition(self, partition: int) -> int:
         latest_offsets = self.get_latest_offsets()
-        for latest_partition, latest_offset in latest_offsets.items():
-            if partition.partition == latest_partition.partition:
-                return latest_offset
+        return latest_offsets.get(partition, -1)
 
-    def get_offsets(self) -> dict:
-        return self.admin_client.list_consumer_group_offsets(self.group_id)
+    def get_offsets(self) -> dict[int, int]:
+        return {topic_partition.partition: offset_meta.offset for (topic_partition, offset_meta)
+                in self.admin_client.list_consumer_group_offsets(self.group_id).items()}
+
+    def get_offset_difference(self) -> OffsetDifference:
+        return OffsetDifference(self.get_offsets(), self.get_latest_offsets())
 
     def wait_for_offset_catchup(self, timeout_seconds: int = 60):
         end_time = time.time() + timeout_seconds
         while time.time() < end_time:
             try:
-                self.ensure_group_up_to_date()
+                self.assert_group_up_to_date()
                 return
             except Exception as e:
                 log.info(e)
             time.sleep(1)
         raise Exception("Timed out!")
 
-    def _is_group_up_to_date(self) -> bool:
-        current_offsets = self.get_offsets()
-        for partition, current_offset in current_offsets.items():
-            latest_offset = self.get_latest_offset_for_partition(partition)
-            if current_offset.offset < latest_offset:
-                return False
-        return True
-
-    def ensure_group_up_to_date(self):
-        if not self._is_group_up_to_date():
-            raise Exception("Not up to date!")
-        log.info(f"Current offsets are up to date!")
+    def assert_group_up_to_date(self):
+        assert self.get_offset_difference().is_up_to_date()
 
     def ensure_not_up_to_date_for_n_seconds(self, seconds: int):
         end_time = time.time() + seconds
         while time.time() < end_time:
-            if self._is_group_up_to_date():
+            offset_difference = self.get_offset_difference()
+            log.info("Offset difference: " + str(offset_difference))
+            if offset_difference.is_up_to_date():
                 raise Exception("Offsets are up to date!")
+            time.sleep(2)

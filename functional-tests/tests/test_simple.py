@@ -32,7 +32,7 @@ def given_service(request, given_factory) -> ServiceInstance:
 @pytest.fixture
 def given_kafka_up_to_date():
     kafka_utils.consume_messages_and_close()
-    kafka_utils.ensure_group_up_to_date()
+    kafka_utils.wait_for_offset_catchup()
 
 
 def test_simple(given_service, given_kafka_up_to_date):
@@ -48,8 +48,6 @@ def test_simple(given_service, given_kafka_up_to_date):
 
     kafka_utils.wait_for_offset_catchup()
 
-    given_service.stop()
-
 
 def test_when_instance_dies(request, given_factory, given_kafka_up_to_date):
     log.info("Starting offset: " + str(kafka_utils.get_offsets()))
@@ -63,7 +61,7 @@ def test_when_instance_dies(request, given_factory, given_kafka_up_to_date):
     instance1 = given_factory.generate_instance()
     instance1.start()
     kafka_utils.wait_until_consumer_group()
-    sleep(10)
+    sleep(15)
     instance1.stop()
 
     sleep(1)
@@ -75,17 +73,16 @@ def test_when_instance_dies(request, given_factory, given_kafka_up_to_date):
     kafka_utils.wait_for_offset_catchup()
 
 
-def test_when_batch_with_delay_blocks_next_batch(request, given_factory, given_kafka_up_to_date):
+def test_when_batch_with_delay_blocks_next_batch(request, given_service, given_kafka_up_to_date):
     log.info("Starting offset: " + str(kafka_utils.get_offsets()))
     log.info("Latest offsets: " + str(kafka_utils.get_latest_offsets()))
 
     for _ in range(5):
         kafka_utils.produce_element_with_delay(60000)
 
-    instance1 = given_factory.generate_instance()
-    instance1.start()
+    given_service.start()
     kafka_utils.wait_until_consumer_group()
-    sleep(5)
+    sleep(15)
 
     kafka_utils.produce_element_with_delay(1000)
 
