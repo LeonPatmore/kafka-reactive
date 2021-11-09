@@ -5,7 +5,7 @@ from kafka import KafkaProducer, KafkaConsumer, KafkaAdminClient, TopicPartition
 from kafka.admin import NewTopic
 from kafka.errors import KafkaError, TopicAlreadyExistsError
 
-from utils import uuid, do_until_true_with_timeout
+from utils import uuid, do_until_true_with_timeout, convert_to_ordered_dict
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class OffsetDifference(object):
     def __init__(self, first_offsets: dict[int, int], second_offsets: dict[int, int]):
         self.first_offsets = first_offsets
         self.second_offsets = second_offsets
-        self.offset_difference = self._calculate_offset_difference()
+        self.offset_difference = convert_to_ordered_dict(self._calculate_offset_difference())
 
     def _calculate_offset_difference(self) -> dict[int, tuple]:
         offset_difference = {}
@@ -94,16 +94,16 @@ class KafkaUtils(object):
         return [TopicPartition(self.topic, partition) for partition in self.consumer.partitions_for_topic(self.topic)]
 
     def get_latest_offsets(self) -> dict[int, int]:
-        return {topic_partition.partition: offset for (topic_partition, offset)
-                in self.consumer.end_offsets(self._get_topic_partitions()).items()}
+        return convert_to_ordered_dict({topic_partition.partition: offset for (topic_partition, offset)
+                                        in self.consumer.end_offsets(self._get_topic_partitions()).items()})
 
     def get_latest_offset_for_partition(self, partition: int) -> int:
         latest_offsets = self.get_latest_offsets()
         return latest_offsets.get(partition, -1)
 
     def get_offsets(self) -> dict[int, int]:
-        return {topic_partition.partition: offset_meta.offset for (topic_partition, offset_meta)
-                in self.admin_client.list_consumer_group_offsets(self.group_id).items()}
+        return convert_to_ordered_dict({topic_partition.partition: offset_meta.offset for (topic_partition, offset_meta)
+                                        in self.admin_client.list_consumer_group_offsets(self.group_id).items()})
 
     def get_offset_difference(self) -> OffsetDifference:
         return OffsetDifference(self.get_offsets(), self.get_latest_offsets())

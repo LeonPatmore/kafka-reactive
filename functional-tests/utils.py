@@ -1,4 +1,5 @@
 import time
+from collections import OrderedDict
 from uuid import uuid4
 
 
@@ -13,3 +14,7 @@ def do_until_true_with_timeout(do: callable, timeout_seconds: int = 60):
             return
         time.sleep(1)
     raise Exception("Timed out!")
+
+
+def convert_to_ordered_dict(my_dict: dict) -> OrderedDict:
+    return OrderedDict(sorted(my_dict.items()))

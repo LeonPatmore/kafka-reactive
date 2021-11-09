@@ -53,7 +53,9 @@ def test_when_instance_dies(request, given_factory, given_kafka_up_to_date):
     log.info("Starting offset: " + str(kafka_utils.get_offsets()))
     log.info("Latest offsets: " + str(kafka_utils.get_latest_offsets()))
 
-    kafka_utils.produce_element_with_delay(8000)
+    kafka_utils.produce_element_with_delay(13000)
+
+    sleep(5)
 
     log.info("New offset: " + str(kafka_utils.get_offsets()))
     log.info("New latest offsets: " + str(kafka_utils.get_latest_offsets()))

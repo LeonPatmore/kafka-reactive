@@ -1,7 +1,7 @@
 import logging
 import os
-import signal
 import threading
+
 from commands import run
 from service_starter import ServiceInstance, ServiceFactory
 
