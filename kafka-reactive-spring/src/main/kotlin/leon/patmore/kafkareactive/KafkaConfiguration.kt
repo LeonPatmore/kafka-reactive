@@ -12,38 +12,22 @@ import java.util.logging.Logger
 
 @Configuration
 @EnableConfigurationProperties(KafkaProperties::class)
-class KafkaConfiguration {
+class KafkaConfiguration(@Value("\${spring.application.name}") private val appName: String) {
 
     companion object {
-        val logger = Logger.getLogger(KafkaProcessor::class.toString())!!
+        private val logger = Logger.getLogger(KafkaConfiguration::class.toString())!!
     }
 
-    @Value("\${spring.application.name}")
-    lateinit var appName: String;
-
-    /**
-     * Creates the receiver options for this kafka consumer.
-     */
     @Bean
     fun receiverOptions(kafkaProperties: KafkaProperties) : ReceiverOptions<Any, Any> {
         logger.info("Using commit batch size [ ${kafkaProperties.commitBatchSize} ]")
         return ReceiverOptions.create<Any, Any>(kafkaProperties.receiverOptions(appName))
-                .commitBatchSize(kafkaProperties.commitBatchSize)
-                .commitInterval(Duration.ZERO)
                 .subscription(Collections.singleton(kafkaProperties.topic))
     }
 
-    /**
-     * Creates the kafka receiver for this consumer.
-     */
     @Bean
     fun receiver(receiverOptions: ReceiverOptions<Any, Any>) : KafkaReceiver<Any, Any> {
         return KafkaReceiver.create(receiverOptions)
-    }
-
-    @Bean
-    fun processor() : KafkaProcessor {
-        return KafkaProcessor()
     }
 
     @Bean

@@ -23,7 +23,7 @@ class KafkaProperties(private val hosts: String,
         props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = hosts
         props[ConsumerConfig.CLIENT_ID_CONFIG] = "sample-consumer"
         props[ConsumerConfig.GROUP_ID_CONFIG] = appName
-        props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = IntegerDeserializer::class.java
+        props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
         return props.toImmutableMap()

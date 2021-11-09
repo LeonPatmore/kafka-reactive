@@ -4,10 +4,11 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
-class KafkaReactiveApplicationTests {
+class TestConsumer {
 
-	@Test
-	fun contextLoads() {
-	}
+    @Test
+    fun test() {
+        Thread.sleep(Integer.MAX_VALUE.toLong())
+    }
 
 }

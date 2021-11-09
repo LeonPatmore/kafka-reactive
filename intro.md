@@ -1,19 +1,4 @@
-
-# Kafka Batch Consumer
-
-Set Java version:
-
-`set PATH=C:\Users\Leon\Downloads\jdk-11\bin;%PATH%`
-
-Maybe you also need to do `set JAVA_HOME=C:\Users\Leon\Downloads\jdk-11`
-
-## Tests
-
-### testAddingElementThenCrashing
-
-Adds a message into Kafka, starts processing then crashes.
-
-`gradlew test --tests *testAddingElementThenCrashing*`
+# Kafka Basic Introduction
 
 
 For each group, one of the brokers is selected as the group coordinator.
@@ -26,7 +11,7 @@ For each group, one of the brokers is selected as the group coordinator.
 
 ## Partition Offsets
 
-![alt text](../docs/pics/offsetsBasics.png)
+![alt text](docs//pics/offsetsBasics.png)
 
 - Last committed offset: The offset that the consumer last fully processed
 - Current position: The current position of the consumer.
@@ -38,7 +23,7 @@ For each group, one of the brokers is selected as the group coordinator.
 You can subscribe by doing:
 `consumer.subscribe([“topic1”, “topic2”])`
 
-The consumer will then coordinate with the rest of the group to assign partitions. 
+The consumer will then coordinate with the rest of the group to assign partitions.
 This is done automatically. You can actually assign partitions in two ways:
 
 - Automatically.

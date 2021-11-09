@@ -44,3 +44,11 @@ class BatchConsumerFactory(ServiceFactory):
         return ProcessInstance("..\\..\\kafka-batch-consumer\\gradlew -b "
                                "..\\..\\kafka-batch-consumer\\build.gradle.kts "
                                "test --tests *TestConsumer*")
+
+
+class SpringReactorFactory(ServiceFactory):
+
+    def generate_instance(self) -> ServiceInstance:
+        return ProcessInstance("..\\..\\kafka-reactive-spring\\gradlew -b "
+                               "..\\..\\kafka-reactive-spring\\build.gradle.kts "
+                               "test --tests *TestConsumer*")
