@@ -7,6 +7,13 @@ def uuid() -> str:
     return str(uuid4())
 
 
+def do_for_n_seconds(do: callable, n: int):
+    end_time = time.time() + n
+    while time.time() < end_time:
+        do()
+        time.sleep(1)
+
+
 def do_until_true_with_timeout(do: callable, timeout_seconds: int = 60):
     end_time = time.time() + timeout_seconds
     while time.time() < end_time:

@@ -6,6 +6,7 @@ import pytest
 from cofiguration import kafka_utils
 from kafka_processor_service import BatchConsumerFactory, SpringReactorFactory
 from service_starter import ServiceInstance
+from utils import do_for_n_seconds
 
 logging.getLogger("kafka.conn").setLevel(logging.WARN)
 log = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ def test_when_instance_dies(request, given_factory, given_kafka_up_to_date):
     instance1 = given_factory.generate_instance()
     instance1.start()
     kafka_utils.wait_until_consumer_group()
-    sleep(15)
+    do_for_n_seconds(lambda: log.info("Latest offsets: " + str(kafka_utils.get_offsets())), 15)
     instance1.stop()
 
     sleep(1)
