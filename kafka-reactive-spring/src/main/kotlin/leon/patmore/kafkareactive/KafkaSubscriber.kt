@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationListener
 import reactor.core.Disposable
 import reactor.kafka.receiver.KafkaReceiver
 import java.util.logging.Logger
+import kotlin.math.log
 
 class KafkaSubscriber (kafkaReceiver: KafkaReceiver<Any, Any>,
                        private val kafkaProcessor: KafkaProcessor) : DisposableBean, ApplicationListener<ApplicationReadyEvent> {
@@ -23,9 +24,8 @@ class KafkaSubscriber (kafkaReceiver: KafkaReceiver<Any, Any>,
 
     private val disposable: Disposable = kafkaReceiver
             .receiveAutoAck()
-            .concatMap{r -> r}
-            .flatMap { kafkaProcessor.process(it) }
-            .subscribe{r -> System.out.println("Received: " + r)}
+            .flatMap{r -> r.flatMap { kafkaProcessor.process(it) }}
+            .subscribe{r -> logger.info { "Received: $r" }}
 
 //        private val disposable: Disposable = kafkaReceiver
 //            .receiveAutoAck()

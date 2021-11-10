@@ -93,3 +93,11 @@ def test_when_batch_with_delay_blocks_next_batch(request, given_service, given_k
     kafka_utils.produce_element_with_delay(1000)
 
     kafka_utils.ensure_not_up_to_date_for_n_seconds(40)
+
+
+def test_generate_records():
+    log.info("Current offsets: " + str(kafka_utils.get_offsets()))
+    for _ in range(5):
+        kafka_utils.produce_element_with_delay(1200000)
+
+    do_for_n_seconds(lambda: log.info("Latest offsets: " + str(kafka_utils.get_offsets())), 500)
