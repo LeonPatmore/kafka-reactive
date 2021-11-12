@@ -16,16 +16,19 @@ class TestReactor {
         private val logger = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 
-@Test
-fun testDoAfterTerminate() {
-    logger.info("Starting test")
-    val sch = Schedulers.single()
-    val testFlux = Flux.fromArray(intArrayOf(1, 2, 3).toTypedArray())
-        .doAfterTerminate { logger.info("Finished processing batch!") }
-//        .delaySequence(Duration.ofSeconds(1), sch)
-        .doOnNext { logger.info("Done $it")}
-        .doAfterTerminate { logger.info("Finished v2")}
-    StepVerifier.create(testFlux).expectNextCount(3).verifyComplete()
-}
+    @Test
+    fun testDoAfterTerminate() {
+        logger.info("Starting test")
+        val sch = Schedulers.newBoundedElastic(100, 100, "a")
+        val testFlux = Flux.fromArray(intArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).toTypedArray())
+            .doAfterTerminate { logger.info("Finished processing batch!") }
+            .parallel()
+            .doOnNext { logger.info("Done $it")}
+            .flatMap { Mono.fromCallable { Thread.sleep(1000) } }
+            .sequential()
+            .doAfterTerminate { logger.info("Finished v2")}
+            .subscribeOn(sch)
+        StepVerifier.create(testFlux).expectNextCount(12).verifyComplete()
+    }
 
 }
