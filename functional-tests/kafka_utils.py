@@ -64,7 +64,7 @@ class KafkaUtils(object):
                                      bootstrap_servers=self.bootstrap_servers,
                                      auto_offset_reset='earliest',
                                      group_id=self.group_id,
-                                     consumer_timeout_ms=2000,
+                                     consumer_timeout_ms=5000,
                                      enable_auto_commit=True)
         for msg in tmp_consumer:
             log.info(f"Found message [ {msg.value} ]")

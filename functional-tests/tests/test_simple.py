@@ -4,7 +4,7 @@ from time import sleep
 import pytest
 
 from cofiguration import kafka_utils
-from kafka_processor_service import BatchConsumerFactory, SpringReactorFactory
+from kafka_processor_service import BatchConsumerFactory, SpringReactorFactory, KafkaParallelConsumerFactory
 from service_starter import ServiceInstance
 from utils import do_for_n_seconds
 
@@ -18,7 +18,7 @@ def ensure_topic():
     kafka_utils.ensure_topic_created()
 
 
-@pytest.fixture(params=[SpringReactorFactory()], scope="session")
+@pytest.fixture(params=[KafkaParallelConsumerFactory()], scope="session")
 def given_factory(request):
     return request.param
 
@@ -45,7 +45,7 @@ def test_simple(given_service, given_kafka_up_to_date):
     log.info("New offset: " + str(kafka_utils.get_offsets()))
     log.info("New latest offsets: " + str(kafka_utils.get_latest_offsets()))
 
-    given_service.start()
+    # given_service.start()
 
     kafka_utils.wait_for_offset_catchup()
 
@@ -81,23 +81,31 @@ def test_when_batch_with_delay_blocks_next_batch(request, given_service, given_k
     log.info("Latest offsets: " + str(kafka_utils.get_latest_offsets()))
 
     for _ in range(5):
-        kafka_utils.produce_element_with_delay(1200000)
+        kafka_utils.produce_element_with_delay(60000)
 
     log.info("Current offsets: " + str(kafka_utils.get_offsets()))
 
-    given_service.start()
+    # given_service.start()
     kafka_utils.wait_until_consumer_group()
     sleep(15)
 
     log.info("Current offsets: " + str(kafka_utils.get_offsets()))
     kafka_utils.produce_element_with_delay(1000)
 
-    kafka_utils.ensure_not_up_to_date_for_n_seconds(40)
+    kafka_utils.ensure_not_up_to_date_for_n_seconds(30)
+
+    do_for_n_seconds(lambda: log.info("Offsets: " + str(kafka_utils.get_offset_difference())), 500)
+    kafka_utils.wait_for_offset_catchup()
 
 
 def test_generate_records():
     log.info("Current offsets: " + str(kafka_utils.get_offsets()))
     for _ in range(5):
         kafka_utils.produce_element_with_delay(1200000)
+    do_for_n_seconds(lambda: log.info("Offsets: " + str(kafka_utils.get_offset_difference())), 500)
 
-    do_for_n_seconds(lambda: log.info("Latest offsets: " + str(kafka_utils.get_offsets())), 500)
+
+def test_generate_error_element():
+    log.info("Current offsets: " + str(kafka_utils.get_offsets()))
+    kafka_utils.produce_element_with_delay(-1)
+    do_for_n_seconds(lambda: log.info("Offsets: " + str(kafka_utils.get_offset_difference())), 500)

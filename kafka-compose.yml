@@ -31,3 +31,10 @@ services:
       KAFKA_JMX_HOSTNAME: localhost
     depends_on:
       - zoo1
+
+  alpine-sqs:
+    image: roribio16/alpine-sqs:1.2.0
+    container_name: alpine-sqs
+    ports:
+      - "9324:9324"
+      - "9325:9325"

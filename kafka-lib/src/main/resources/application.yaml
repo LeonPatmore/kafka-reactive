@@ -1,0 +1,8 @@
+nexmo:
+  sqs:
+    enabled: true
+    client:
+      endpoint-override: http://localhost:9324
+retry:
+  consumer:
+    name: default

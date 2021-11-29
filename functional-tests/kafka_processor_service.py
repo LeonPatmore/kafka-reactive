@@ -8,7 +8,7 @@ from service_starter import ServiceInstance, ServiceFactory
 log = logging.getLogger(__name__)
 
 
-class ProcessInstance(ServiceInstance):
+class LocalProcessInstance(ServiceInstance):
 
     class _Thread(threading.Thread):
 
@@ -23,9 +23,18 @@ class ProcessInstance(ServiceInstance):
         def stop(self):
             os.system(f"taskkill /pid {self.process.pid} /f /t")
 
-    def __init__(self, cmd):
+    def __init__(self, folder: str):
         self.thread = None
-        self.cmd = cmd
+        self.cmd = self._get_cmd(folder)
+
+    @staticmethod
+    def _get_cmd(folder: str):
+        # TODO: Max dynamic.
+        os = "mac"
+        if os is "mac":
+            return f"../../{folder}/gradlew -b ../../{folder}/build.gradle.kts test --tests *TestConsumer*"
+        else:
+            return f"..\\..\\{folder}\\gradlew -b ..\\..\\{folder}\\build.gradle.kts test --tests *TestConsumer*"
 
     def start(self):
         log.info("Starting service!")
@@ -38,17 +47,19 @@ class ProcessInstance(ServiceInstance):
         self.thread.join()
 
 
+class KafkaParallelConsumerFactory(ServiceFactory):
+
+    def generate_instance(self) -> ServiceInstance:
+        return LocalProcessInstance("kafka-lib")
+
+
 class BatchConsumerFactory(ServiceFactory):
 
     def generate_instance(self) -> ServiceInstance:
-        return ProcessInstance("..\\..\\kafka-batch-consumer\\gradlew -b "
-                               "..\\..\\kafka-batch-consumer\\build.gradle.kts "
-                               "test --tests *TestConsumer*")
+        return LocalProcessInstance("kafka-batch-consumer")
 
 
 class SpringReactorFactory(ServiceFactory):
 
     def generate_instance(self) -> ServiceInstance:
-        return ProcessInstance("..\\..\\kafka-reactive-spring\\gradlew -b "
-                               "..\\..\\kafka-reactive-spring\\build.gradle.kts "
-                               "test --tests *TestConsumer*")
+        return LocalProcessInstance("kafka-reactive-spring")
